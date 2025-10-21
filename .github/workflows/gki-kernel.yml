@@ -356,68 +356,51 @@ jobs:
       - name: 一些修补补丁
         run: |
           cd "$CONFIG/common"
-          echo "Fake Patch to fix failures..."
-          
+          # Fake Patch to fix failures
           fake_patched=0
-          apply_fake_patch() {
-            local android_ver="$1"
-            local kernel_ver="$2"
-            local grep_pattern="$3"
-            local sed_pattern="$4"
-            local sed_repl="$5"
-          
-            if [ "${{ env.android_version }}" = "$android_ver" ] && [ "${{ env.kernel_version }}" = "$kernel_ver" ]; then
-              if ! grep -qxF "$grep_pattern" ./fs/proc/task_mmu.c; then
-                echo "未找到 $grep_pattern,正在进行补丁修复"
-                sed -i "$sed_pattern" ./fs/proc/task_mmu.c
-                fake_patched=1
-              fi
+          if [ "${{ env.android_version }}" = "android15" ] && [ "${{ env.kernel_version }}" = "6.6" ]; then
+            if ! grep -qxF $'\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;' ./fs/proc/task_mmu.c; then
+              echo "未找到 nr_subpages,正在进行补丁修复"
+              sed -i -e '/int ret = 0, copied = 0;/a \\tunsigned int nr_subpages \= __PAGE_SIZE \/ PAGE_SIZE;' -e '/int ret = 0, copied = 0;/a \\tpagemap_entry_t \*res = NULL;' ./fs/proc/task_mmu.c
+              fake_patched=1
             fi
-          }
-          
-          rollback_fake_patch() {
-            local android_ver="$1"
-            local kernel_ver="$2"
-            local grep_pattern="$3"
-            local sed_pattern="$4"
-          
-            if [ "${{ env.android_version }}" = "$android_ver" ] && [ "${{ env.kernel_version }}" = "$kernel_ver" ]; then
-              if grep -qxF "$grep_pattern" ./fs/proc/task_mmu.c; then
-                sed -i "$sed_pattern" ./fs/proc/task_mmu.c
-              fi
-            fi
-          }
-          
-          # 应用补丁
-          apply_fake_patch "android15" "6.6" $'\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;' \
-            -e '/int ret = 0, copied = 0;/a \\tunsigned int nr_subpages \= __PAGE_SIZE \/ PAGE_SIZE;' \
-            -e '/int ret = 0, copied = 0;/a \\tpagemap_entry_t \*res = NULL;'
-          
-          apply_fake_patch "android12" "5.10" $'\tif (!vma_pages(vma))' \
-            -e '/int ret = 0, copied = 0;/a \\tif (!vma_pages(vma))' \
-            ''
-          
-          apply_fake_patch "android113" "5.10" $'\tif (!vma_pages(vma))' \
-            -e '/int ret = 0, copied = 0;/a \\tif (!vma_pages(vma))' \
-            ''
-          
-          apply_fake_patch "android13" "5.15" $'\tif (!vma_pages(vma))' \
-            -e '/int ret = 0, copied = 0;/a \\tif (!vma_pages(vma))' \
-            ''
-          
+          fi
+          if [ "${{ env.android_version }}" = "android12" ] && [ "${{ env.kernel_version }}" = "5.10" ]; then
+            if ! grep -qxF $'\tif (!vma_pages(vma))' ./fs/proc/task_mmu.c; then
+              echo "未找到 vma_pages,正在进行补丁修复"
+              fake_patched=1
+    
+          if [ "${{ env.android_version }}" = "android113" ] && [ "${{ env.kernel_version }}" = "5.10" ]; then
+            if ! grep -qxF $'\tif (!vma_pages(vma))' ./fs/proc/task_mmu.c; then
+              echo "未找到 vma_pages,正在进行补丁修复"
+              fake_patched=1
+    
+          if [ "${{ env.android_version }}" = "android13" ] && [ "${{ env.kernel_version }}" = "5.15" ]; then
+            if ! grep -qxF $'\tif (!vma_pages(vma))' ./fs/proc/task_mmu.c; then
+              echo "未找到 vma_pages,正在进行补丁修复"
+              fake_patched=1
+    
           if [ "$fake_patched" = 1 ]; then
-            rollback_fake_patch "android15" "6.6" $'\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;' \
-              -e '/unsigned int nr_subpages \= __PAGE_SIZE \/ PAGE_SIZE;/d' \
-              -e '/pagemap_entry_t \*res = NULL;/d'
-          
-            rollback_fake_patch "android12" "5.10" $'\t\tgoto show_pad;' \
-              -e 's/goto show_pad;/return 0;/'
-          
-            rollback_fake_patch "android13" "5.10" $'\t\tgoto show_pad;' \
-              -e 's/goto show_pad;/return 0;/'
-          
-            rollback_fake_patch "android13" "5.15" $'\t\tgoto show_pad;' \
-              -e 's/goto show_pad;/return 0;/'
+            if [ "${{ env.android_version }}" = "android15" ] && [ "${{ env.kernel_version }}" = "6.6" ]; then
+              if grep -qxF $'\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;' ./fs/proc/task_mmu.c; then
+                sed -i -e '/unsigned int nr_subpages \= __PAGE_SIZE \/ PAGE_SIZE;/d' -e '/pagemap_entry_t \*res = NULL;/d' ./fs/proc/task_mmu.c
+              fi
+            fi
+            if [ "${{ env.android_version }}" = "android12" ] && [ "${{ env.kernel_version }}" = "5.10" ]; then
+              if grep -qxF $'\t\tgoto show_pad;' ./fs/proc/task_mmu.c; then
+                sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
+              fi
+            fi
+            if [ "${{ env.android_version }}" = "android13" ] && [ "${{ env.kernel_version }}" = "5.10" ]; then
+              if grep -qxF $'\t\tgoto show_pad;' ./fs/proc/task_mmu.c; then
+                sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
+              fi
+            fi
+            if [ "${{ env.android_version }}" = "android13" ] && [ "${{ env.kernel_version }}" = "5.15" ]; then
+              if grep -qxF $'\t\tgoto show_pad;' ./fs/proc/task_mmu.c; then
+                sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
+              fi
+            fi
           fi
 
       - name: 复制源文件 & 应用LZ4KD & ZSTDN补丁
